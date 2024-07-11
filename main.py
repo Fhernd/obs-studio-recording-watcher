@@ -8,7 +8,7 @@ from tkinter import simpledialog, messagebox
 # OBS WebSocket connection settings
 host = "192.168.1.40"
 port = 4455
-password = "HgXc7hxxS1Ccj724"
+password = "9c1drmdDjx75lMYv"
 
 # Function to show a prompt to rename the file
 def show_prompt_and_rename(file_path):
@@ -27,9 +27,13 @@ def show_prompt_and_rename(file_path):
 
 # Event handler for recording stop
 def on_recording_stopped(event):
+    print('Recording stopped event triggered')
     # Retrieve the most recent recording file path
-    rec_file = ws.call(obswebsocket.requests.GetRecordingStatus()).getRecordingFilename()
-    show_prompt_and_rename(rec_file)
+    try:
+        rec_file = ws.call(obswebsocket.requests.GetRecordingStatus()).getRecordingFilename()
+        show_prompt_and_rename(rec_file)
+    except Exception as e:
+        print(f"Error retrieving recording file path: {e}")
 
 # Connect to OBS WebSocket
 ws = obsws(host, port, password)
@@ -37,6 +41,7 @@ ws.connect()
 
 # Register event handler
 ws.register(on_recording_stopped, events.RecordingStopped)
+print("Event handler registered for RecordingStopped")
 
 try:
     print("Monitoring recording status...")
@@ -46,3 +51,4 @@ except KeyboardInterrupt:
     pass
 finally:
     ws.disconnect()
+    print("Disconnected from OBS WebSocket")
