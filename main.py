@@ -25,28 +25,20 @@ def show_prompt_and_rename(file_path):
     else:
         messagebox.showinfo("No Change", "Recording file name was not changed.")
 
-# Event handler for recording stop
-def on_recording_stopped(event):
-    print('Recording stopped event triggered')
-    try:
-        rec_file = ws.call(requests.GetRecordingStatus()).getRecordingFilename()
+# Event handler for recording state changes
+def on_record_state_changed(event):
+    print(f'RecordStateChanged event: {event}')
+    if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
+        rec_file = event.datain['outputPath']
         show_prompt_and_rename(rec_file)
-    except Exception as e:
-        print(f"Error retrieving recording file path: {e}")
-
-# Event handler for all events
-def on_event(event):
-    print(f"Event received: {event}")
 
 # Connect to OBS WebSocket
 ws = obsws(host, port, password)
 ws.connect()
 
 # Register event handler
-ws.register(on_recording_stopped, events.RecordingStopped)
-ws.register(on_event)
-
-print("Event handler registered for RecordingStopped")
+ws.register(on_record_state_changed, events.RecordStateChanged)
+print("Event handler registered for RecordStateChanged")
 
 try:
     print("Monitoring recording status...")
