@@ -25,27 +25,43 @@ def show_prompt_and_rename(file_path):
     else:
         messagebox.showinfo("No Change", "Recording file name was not changed.")
 
-# Event handler for recording state changes
+
 def on_record_state_changed(event):
-    print(f'RecordStateChanged event: {event}')
+    """
+    Event handler for RecordStateChanged event.
+
+    This function is called whenever the recording state changes in OBS.
+
+    Args:
+        event (dict): Event data dictionary.
+    """
     if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
         rec_file = event.datain['outputPath']
         show_prompt_and_rename(rec_file)
 
-# Connect to OBS WebSocket
-ws = obsws(host, port, password)
-ws.connect()
 
-# Register event handler
-ws.register(on_record_state_changed, events.RecordStateChanged)
-print("Event handler registered for RecordStateChanged")
+def main():
+    """
+    Main function to connect to OBS WebSocket and monitor recording status.
 
-try:
-    print("Monitoring recording status...")
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    pass
-finally:
-    ws.disconnect()
-    print("Disconnected from OBS WebSocket")
+    This function connects to OBS WebSocket, registers an event handler for RecordStateChanged event, and then monitors the recording status.
+    """
+    ws = obsws(host, port, password)
+    ws.connect()
+
+    ws.register(on_record_state_changed, events.RecordStateChanged)
+    print("Event handler registered for RecordStateChanged")
+
+    try:
+        print("Monitoring recording status...")
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        ws.disconnect()
+        print("Disconnected from OBS WebSocket")
+
+
+if __name__ == "__main__":
+    main()
