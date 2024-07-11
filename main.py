@@ -1,17 +1,23 @@
 import time
 import os
-import obswebsocket
 from obswebsocket import obsws, events, requests
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 
-# OBS WebSocket connection settings
 host = "192.168.1.40"
 port = 4455
 password = "9c1drmdDjx75lMYv"
 
-# Function to show a prompt to rename the file
+
 def show_prompt_and_rename(file_path):
+    """
+    Show a prompt to rename the recording file.
+
+    This function shows a prompt to enter a new name for the recording file and renames the file accordingly.
+
+    Args:
+        file_path (str): Path to the recording file.
+    """
     root = tk.Tk()
     root.withdraw()
     new_name = simpledialog.askstring("Rename Recording", "Enter new name for the recording file (without extension):")
