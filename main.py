@@ -1,7 +1,7 @@
 import time
 import os
 import obswebsocket
-from obswebsocket import obsws, events
+from obswebsocket import obsws, events, requests
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 
@@ -28,12 +28,15 @@ def show_prompt_and_rename(file_path):
 # Event handler for recording stop
 def on_recording_stopped(event):
     print('Recording stopped event triggered')
-    # Retrieve the most recent recording file path
     try:
-        rec_file = ws.call(obswebsocket.requests.GetRecordingStatus()).getRecordingFilename()
+        rec_file = ws.call(requests.GetRecordingStatus()).getRecordingFilename()
         show_prompt_and_rename(rec_file)
     except Exception as e:
         print(f"Error retrieving recording file path: {e}")
+
+# Event handler for all events
+def on_event(event):
+    print(f"Event received: {event}")
 
 # Connect to OBS WebSocket
 ws = obsws(host, port, password)
@@ -41,6 +44,8 @@ ws.connect()
 
 # Register event handler
 ws.register(on_recording_stopped, events.RecordingStopped)
+ws.register(on_event)
+
 print("Event handler registered for RecordingStopped")
 
 try:
