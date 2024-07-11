@@ -20,7 +20,7 @@ def show_prompt_and_rename(file_path):
     """
     root = tk.Tk()
     root.withdraw()
-    new_name = simpledialog.askstring("Rename Recording", "Enter new name for the recording file (without extension):")
+    new_name = simpledialog.askstring("Rename Recording", "Enter new name for the recording file (without extension):", initialvalue=os.path.basename(file_path))
     root.destroy()
     
     if new_name:
