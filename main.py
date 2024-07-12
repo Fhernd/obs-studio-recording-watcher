@@ -28,15 +28,20 @@ def main(page: ft.Page):
     page.window.resizable = False
 
     txt_status = ft.Text("Estado grabación: No iniciada", size=20, color=ft.colors.BLACK)
+    
     ref_txt_nombre_archivo = ft.Ref[ft.TextField]()
+    
+    btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
+    btn_stop_monitoring = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring)
+    btn_stop_monitoring.disabled = True
 
-    def update_status(status):
+    def update_recording_status(status):
         """
         Update the recording status text.
 
         :param status: The new status to display.
         """
-        txt_status.value = f"Estado gragbación: {status}"
+        txt_status.value = f"Estado grabación: {status}"
         page.update()
 
     def start_monitoring(e):
@@ -46,8 +51,12 @@ def main(page: ft.Page):
         :param e: The event object.
         """
         global monitoring, ws
+
+        btn_start_monitoring.disabled = True
+        btn_stop_monitoring.disabled = False
+
         monitoring = True
-        update_status("Monitoreando...")
+        update_recording_status("Monitoreando...")
         ws = obsws(host, port, password)
         ws.connect()
         ws.register(on_record_state_changed, events.RecordStateChanged)
@@ -63,9 +72,13 @@ def main(page: ft.Page):
         """
         global monitoring, ws
         monitoring = False
+
+        btn_start_monitoring.disabled = False
+        btn_stop_monitoring.disabled = True
+        
         if ws:
             ws.disconnect()
-        update_status("No iniciada")
+        update_recording_status("No iniciada")
         page.add(ft.Text("Monitoreo detenido"))
 
     def on_record_state_changed(event):
@@ -90,7 +103,7 @@ def main(page: ft.Page):
                 base, ext = os.path.splitext(file_path)
                 new_file_path = os.path.join(os.path.dirname(file_path), new_name + ext)
                 os.rename(file_path, new_file_path)
-                update_status("Finalizado")
+                update_recording_status("Finalizada")
                 dlg_modal.open = False
                 page.update()
 
@@ -115,9 +128,7 @@ def main(page: ft.Page):
         dlg_modal.open = True
         page.update()
 
-    btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
-    btn_stop_monitoring = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring)
-
+    
     page.add(
         ft.Column(
             [
