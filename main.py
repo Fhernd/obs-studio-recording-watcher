@@ -167,16 +167,28 @@ def main(page: ft.Page):
             page.open(dlg_modal)
 
 
-    btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
-    btn_stop_monitoring = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring)
+    btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring, color=ft.colors.WHITE, bgcolor=ft.colors.GREEN_500)
+    btn_stop_monitoring = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring, color=ft.colors.WHITE, bgcolor=ft.colors.RED_500)
     btn_stop_monitoring.disabled = True
     
     page.add(
         ft.Column(
             [
-                txt_status,
-                btn_start_monitoring,
-                btn_stop_monitoring
+                ft.Row(
+                    [
+                        ft.Container(txt_status)
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER
+                ),
+                ft.Row(
+                    [
+                        ft.Container(btn_start_monitoring),
+                        ft.Container(btn_stop_monitoring)
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER
+                )
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER
