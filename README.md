@@ -2,6 +2,8 @@
 
 Aplicación para monitorear la carpeta de grabaciones de la aplicación *OBS Studio*.
 
+![OBS Recording Monitor](./assets/OBS_Recording_Monitor_v1.png)
+
 # 2. Requerimientos
 
 Para el correcto funcionamiento de la aplicación, se necesitan los siguientes componentes:
