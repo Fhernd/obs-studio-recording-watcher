@@ -32,3 +32,28 @@ Para el correcto funcionamiento de la aplicación, se necesitan los siguientes c
    ```
 
 `.\venv\Scripts\activate`
+
+
+# 4. Instalación de dependencias
+
+Una vez que el ambiente virtual está activado, instala las dependencias necesarias para el proyecto ejecutando el siguiente comando en la terminal:
+
+```bash
+pip install -r requirements.txt
+```
+
+Este comando leerá el archivo `requirements.txt` ubicado en el directorio del proyecto y procederá a instalar todas las librerías y paquetes listados en él.
+
+# 5. Ejecución
+
+Para ejecutar la aplicación, sigue estos pasos:
+
+1. Asegúrate de que el ambiente virtual esté activado. Si no está activado, sigue las instrucciones en la sección 3 para tu sistema operativo.
+
+2. Navega hasta el directorio del proyecto donde se encuentra el archivo principal de la aplicación -`main.py`-.
+
+3. Ejecuta la aplicación utilizando el siguiente comando:
+
+   ```bash
+   python app.py
+```
