@@ -18,10 +18,9 @@ Para el correcto funcionamiento de la aplicación, se necesitan los siguientes c
    Abre una terminal y navega hasta el directorio del proyecto. Luego, ejecuta el siguiente comando para crear un ambiente virtual llamado `venv`:
 
    ```bash
-   python3 -m venv venv
+    python3 -m venv venv
+    source venv/bin/activate`
    ```
-
-`source venv/bin/activate`
 
 ## 3.2 Windows
 
@@ -29,9 +28,8 @@ Para el correcto funcionamiento de la aplicación, se necesitan los siguientes c
 
    ```bash
    python -m venv venv
+   .\venv\Scripts\activate
    ```
-
-`.\venv\Scripts\activate`
 
 
 # 4. Instalación de dependencias
@@ -54,6 +52,6 @@ Para ejecutar la aplicación, sigue estos pasos:
 
 3. Ejecuta la aplicación utilizando el siguiente comando:
 
-   ```bash
-   python app.py
-```
+    ```bash
+        python main.py
+    ```
