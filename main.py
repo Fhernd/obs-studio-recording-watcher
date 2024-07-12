@@ -33,6 +33,7 @@ def main(page: ft.Page):
     
     snb = ft.SnackBar(content=ft.Text(""))
 
+
     def update_recording_status(status):
         """
         Update the recording status text.
@@ -92,7 +93,7 @@ def main(page: ft.Page):
 
         :param event: The event object.
         """
-        print('on_record_state_changed...')
+
         if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
             rec_file = event.datain['outputPath']
             show_rename_dialog(rec_file)
@@ -140,15 +141,32 @@ def main(page: ft.Page):
 
         :param e: The event object.
         """
+        print('on_window_event')
         global monitoring, ws
 
+        def handle_close(e):
+            if e.control.text == "Yes":
+                if ws:
+                    ws.disconnect()
+                page.window.destroy()
+            else:
+                dlg_modal.open = False
+
         if e.type == ft.WindowEventType.CLOSE:
-            monitoring = False
-        
-            if ws:
-                ws.disconnect()
-            
-            page.window.destroy()
+            dlg_modal = ft.AlertDialog(
+                modal=True,
+                title=ft.Text('Confirmación de cierre'),
+                content=ft.Text('¿Está seguro que desea cerrar la aplicación?'),
+                actions=[
+                    ft.TextButton("Yes", on_click=handle_close),
+                    ft.TextButton("No", on_click=handle_close),
+                ],
+                actions_alignment=ft.MainAxisAlignment.END,
+            )
+
+            print('here')
+
+            page.open(dlg_modal)
 
 
     btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
