@@ -142,15 +142,16 @@ def main(page: ft.Page):
         :param e: The event object.
         """
         print('on_window_event')
-        global monitoring, ws
 
         def handle_close(e):
+            global monitoring, ws
+
             if e.control.text == "Yes":
                 if ws:
                     ws.disconnect()
                 page.window.destroy()
             else:
-                dlg_modal.open = False
+                page.close(dlg_modal)
 
         if e.type == ft.WindowEventType.CLOSE:
             dlg_modal = ft.AlertDialog(
@@ -163,8 +164,6 @@ def main(page: ft.Page):
                 ],
                 actions_alignment=ft.MainAxisAlignment.END,
             )
-
-            print('here')
 
             page.open(dlg_modal)
 
