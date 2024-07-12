@@ -91,6 +91,7 @@ def main(page: ft.Page):
                 page.update()
 
         initial_file_name = os.path.basename(file_path)
+        initial_file_name = os.path.splitext(initial_file_name)[0]
 
         dlg_modal = ft.AlertDialog(
             modal=True,
