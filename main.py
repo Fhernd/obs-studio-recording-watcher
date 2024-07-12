@@ -133,6 +133,17 @@ def main(page: ft.Page):
         dlg_modal.open = True
         page.update()
 
+    def on_close(e):
+        """
+        Callback function to handle the close event.
+
+        :param e: The event object.
+        """
+        if ws:
+            monitoring = False
+            ws.disconnect()
+
+
     btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
     btn_stop_monitoring = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring)
     btn_stop_monitoring.disabled = True
@@ -150,6 +161,7 @@ def main(page: ft.Page):
     )
 
     page.overlay.append(snb)
+    page.on_close = on_close
 
 
 if __name__ == "__main__":
