@@ -3,7 +3,7 @@ import os
 
 from dotenv import load_dotenv
 import flet as ft
-from obswebsocket import obsws, events, requests
+from obswebsocket import obsws, events
 
 
 load_dotenv()
@@ -15,15 +15,16 @@ password = os.getenv("OBS_PASSWORD")
 monitoring = False
 ws = None
 
+
 def main(page: ft.Page):
     """
     Main function of the app.
 
     :param page: The page object to add the app content to.
     """
-    page.title = "OBS Recording Monitor"
-    page.window.width = 500
-    page.window.height = 500
+    page.title = 'OBS Recording Monitor'
+    page.window.width = 650
+    page.window.height = 450
     page.window.resizable = False
 
     txt_status = ft.Text("Estado grabación: No iniciada", size=20, color=ft.colors.BLACK)
