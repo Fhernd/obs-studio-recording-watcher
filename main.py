@@ -59,8 +59,9 @@ def main(page: ft.Page):
         ws.connect()
         ws.register(on_record_state_changed, events.RecordStateChanged)
         
-        page.snack_bar = ft.SnackBar(content=ft.Text("Monitoreo iniciado"))
-        page.snak_bar.open = True
+        snb = ft.SnackBar(content=ft.Text("Monitoreo iniciado"))
+        page.overlay.append(snb)
+        page.snack_bar.open = True
         page.update()
         
         while monitoring:
@@ -82,8 +83,9 @@ def main(page: ft.Page):
             ws.disconnect()
         update_recording_status("No iniciada")
         
-        page.snack_bar = ft.SnackBar(content=ft.Text("Monitoreo detenido"))
-        page.snak_bar.open = True
+        snb = ft.SnackBar(content=ft.Text("Monitoreo finalizado"))
+        page.overlay.append(snb)
+        page.snack_bar.open = True
         page.update()
 
     def on_record_state_changed(event):
@@ -149,7 +151,7 @@ def main(page: ft.Page):
         )
     )
 
-    page.snack_bar = snb
+    page.overlay.append(snb)
 
 
 if __name__ == "__main__":
