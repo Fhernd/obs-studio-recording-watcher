@@ -1,6 +1,6 @@
 # 1. Introducción
 
-Aplicación para monitorear la carpeta de grabaciones de la aplicación *OBS Studio*.
+Aplicación para monitorear la carpeta de grabaciones de la aplicación *OBS Studio*. Una vez finaliza una grabación se muestra un diálogo para establecer el nombre del archivo por uno definido por el usuario.
 
 ![OBS Recording Monitor](./assets/OBS_Recording_Monitor_v1.png)
 
