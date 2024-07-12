@@ -80,7 +80,6 @@ def main(page: ft.Page):
         
         if ws:
             ws.disconnect()
-        update_recording_status("No iniciada")
         
         snb.content = ft.Text("Monitoreo detenido")
         snb.open = True
@@ -92,8 +91,9 @@ def main(page: ft.Page):
 
         :param event: The event object.
         """
-
-        if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
+        if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STARTING':
+            update_recording_status("En progreso")
+        elif event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
             rec_file = event.datain['outputPath']
             show_rename_dialog(rec_file)
 
