@@ -1,10 +1,9 @@
-import flet as ft
 import time
 import os
-import obswebsocket
+
+import flet as ft
 from obswebsocket import obsws, events, requests
 
-# OBS WebSocket connection settings
 host = "192.168.1.40"
 port = 4455
 password = "9c1drmdDjx75lMYv"
@@ -14,16 +13,21 @@ monitoring = False
 ws = None
 
 def main(page: ft.Page):
-    page.title = "OBS Recording Monitor"
-    page.window_width = 500
-    page.window_height = 500
-    page.window_resizable = False
+    """
+    Main function of the app.
 
-    status_text = ft.Text("Estado: No iniciado", size=20, color=ft.colors.BLACK)
+    :param page: The page object to add the app content to.
+    """
+    page.title = "OBS Recording Monitor"
+    page.window.width = 500
+    page.window.height = 500
+    page.window.resizable = False
+
+    txt_status = ft.Text("Estado grabación: No iniciada", size=20, color=ft.colors.BLACK)
     ref_txt_nombre_archivo = ft.Ref[ft.TextField]()
 
     def update_status(status):
-        status_text.value = f"Estado: {status}"
+        txt_status.value = f"Estado gragbación: {status}"
         page.update()
 
     def start_monitoring(e):
@@ -42,7 +46,7 @@ def main(page: ft.Page):
         monitoring = False
         if ws:
             ws.disconnect()
-        update_status("No iniciado")
+        update_status("No iniciada")
         page.add(ft.Text("Monitoreo detenido"))
 
     def on_record_state_changed(event):
@@ -57,10 +61,6 @@ def main(page: ft.Page):
         :param file_path: The path of the recording file.
         """
         def rename_file(e):
-            print('ref_txt_nombre', ref_txt_nombre_archivo)
-            print(ref_txt_nombre_archivo.current)
-            print()
-
             new_name = ref_txt_nombre_archivo.current.value
             if new_name:
                 base, ext = os.path.splitext(file_path)
@@ -70,13 +70,15 @@ def main(page: ft.Page):
                 dlg_modal.open = False
                 page.update()
 
+        initial_file_name = os.path.basename(file_path)
+
         dlg_modal = ft.AlertDialog(
             modal=True,
             title=ft.Text("Renombrar Grabación"),
             content=ft.Column(
                 [
                     ft.Text("Ingrese un nuevo nombre para la grabación (sin extensión):"),
-                    ft.TextField(ref=ref_txt_nombre_archivo, expand=True, autofocus=True)
+                    ft.TextField(ref=ref_txt_nombre_archivo, expand=True, autofocus=True, value=initial_file_name)
                 ],
                 tight=True
             ),
@@ -88,15 +90,15 @@ def main(page: ft.Page):
         dlg_modal.open = True
         page.update()
 
-    start_button = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
-    stop_button = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring)
+    btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
+    btn_stop_monitoring = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring)
 
     page.add(
         ft.Column(
             [
-                status_text,
-                start_button,
-                stop_button
+                txt_status,
+                btn_start_monitoring,
+                btn_stop_monitoring
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER
