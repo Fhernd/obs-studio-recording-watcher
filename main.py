@@ -141,12 +141,11 @@ def main(page: ft.Page):
 
         :param e: The event object.
         """
-        print('on_window_event')
-
         def handle_close(e):
             global monitoring, ws
 
             if e.control.text == "Yes":
+                monitoring = False
                 if ws:
                     ws.disconnect()
                 page.window.destroy()
