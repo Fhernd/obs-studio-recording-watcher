@@ -27,10 +27,20 @@ def main(page: ft.Page):
     ref_txt_nombre_archivo = ft.Ref[ft.TextField]()
 
     def update_status(status):
+        """
+        Update the recording status text.
+
+        :param status: The new status to display.
+        """
         txt_status.value = f"Estado gragbación: {status}"
         page.update()
 
     def start_monitoring(e):
+        """
+        Start monitoring the recording state.
+
+        :param e: The event object.
+        """
         global monitoring, ws
         monitoring = True
         update_status("Monitoreando...")
@@ -42,6 +52,11 @@ def main(page: ft.Page):
             time.sleep(1)
 
     def stop_monitoring(e):
+        """
+        Stop monitoring the recording state.
+
+        :param e: The event object.
+        """
         global monitoring, ws
         monitoring = False
         if ws:
@@ -50,6 +65,11 @@ def main(page: ft.Page):
         page.add(ft.Text("Monitoreo detenido"))
 
     def on_record_state_changed(event):
+        """
+        Callback function to handle the recording state change event.
+
+        :param event: The event object.
+        """
         if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
             rec_file = event.datain['outputPath']
             show_rename_dialog(rec_file)
@@ -86,7 +106,7 @@ def main(page: ft.Page):
                 ft.TextButton("Renombrar", on_click=rename_file)
             ]
         )
-        page.dialog = dlg_modal
+        page.overlay.append(dlg_modal)
         dlg_modal.open = True
         page.update()
 
@@ -105,4 +125,6 @@ def main(page: ft.Page):
         )
     )
 
-ft.app(target=main)
+
+if __name__ == "__main__":
+    ft.app(target=main)
