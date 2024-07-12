@@ -1,73 +1,102 @@
+import flet as ft
 import time
 import os
+import obswebsocket
 from obswebsocket import obsws, events, requests
-import tkinter as tk
-from tkinter import simpledialog, messagebox
 
+# OBS WebSocket connection settings
 host = "192.168.1.40"
 port = 4455
 password = "9c1drmdDjx75lMYv"
 
+# Global variables to track monitoring state and WebSocket connection
+monitoring = False
+ws = None
 
-def show_prompt_and_rename(file_path):
-    """
-    Show a prompt to rename the recording file.
+def main(page: ft.Page):
+    page.title = "OBS Recording Monitor"
+    page.window_width = 500
+    page.window_height = 500
+    page.window_resizable = False
 
-    This function shows a prompt to enter a new name for the recording file and renames the file accordingly.
+    status_text = ft.Text("Estado: No iniciado", size=20, color=ft.colors.BLACK)
+    ref_txt_nombre_archivo = ft.Ref[ft.TextField]()
 
-    Args:
-        file_path (str): Path to the recording file.
-    """
-    root = tk.Tk()
-    root.withdraw()
-    new_name = simpledialog.askstring("Rename Recording", "Enter new name for the recording file (without extension):", initialvalue=os.path.basename(file_path))
-    root.destroy()
-    
-    if new_name:
-        base, ext = os.path.splitext(file_path)
-        new_file_path = os.path.join(os.path.dirname(file_path), new_name + ext)
-        os.rename(file_path, new_file_path)
-        messagebox.showinfo("File Renamed", f"Recording file has been renamed to: {new_file_path}")
-    else:
-        messagebox.showinfo("No Change", "Recording file name was not changed.")
+    def update_status(status):
+        status_text.value = f"Estado: {status}"
+        page.update()
 
-
-def on_record_state_changed(event):
-    """
-    Event handler for RecordStateChanged event.
-
-    This function is called whenever the recording state changes in OBS.
-
-    Args:
-        event (dict): Event data dictionary.
-    """
-    if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
-        rec_file = event.datain['outputPath']
-        show_prompt_and_rename(rec_file)
-
-
-def main():
-    """
-    Main function to connect to OBS WebSocket and monitor recording status.
-
-    This function connects to OBS WebSocket, registers an event handler for RecordStateChanged event, and then monitors the recording status.
-    """
-    ws = obsws(host, port, password)
-    ws.connect()
-
-    ws.register(on_record_state_changed, events.RecordStateChanged)
-    print("Event handler registered for RecordStateChanged")
-
-    try:
-        print("Monitoring recording status...")
-        while True:
+    def start_monitoring(e):
+        global monitoring, ws
+        monitoring = True
+        update_status("Monitoreando...")
+        ws = obsws(host, port, password)
+        ws.connect()
+        ws.register(on_record_state_changed, events.RecordStateChanged)
+        page.add(ft.Text("Monitoreo iniciado"))
+        while monitoring:
             time.sleep(1)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        ws.disconnect()
-        print("Disconnected from OBS WebSocket")
 
+    def stop_monitoring(e):
+        global monitoring, ws
+        monitoring = False
+        if ws:
+            ws.disconnect()
+        update_status("No iniciado")
+        page.add(ft.Text("Monitoreo detenido"))
 
-if __name__ == "__main__":
-    main()
+    def on_record_state_changed(event):
+        if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
+            rec_file = event.datain['outputPath']
+            show_rename_dialog(rec_file)
+
+    def show_rename_dialog(file_path):
+        """
+        Show a dialog to rename the recording file.
+
+        :param file_path: The path of the recording file.
+        """
+        def rename_file(e):
+            new_name = ref_txt_nombre_archivo.current.value
+            if new_name:
+                base, ext = os.path.splitext(file_path)
+                new_file_path = os.path.join(os.path.dirname(file_path), new_name + ext)
+                os.rename(file_path, new_file_path)
+                update_status("Finalizado")
+                dlg_modal.open = False
+                page.update()
+
+        dlg_modal = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Renombrar Grabación"),
+            content=ft.Column(
+                [
+                    ft.Text("Ingrese un nuevo nombre para la grabación (sin extensión):"),
+                    ft.TextField(ref=lambda c: setattr(ref_txt_nombre_archivo, 'value', c.value), expand=True)
+                ],
+                tight=True
+            ),
+            actions=[
+                ft.TextButton("Renombrar", on_click=rename_file)
+            ]
+        )
+        page.dialog = dlg_modal
+        dlg_modal.open = True
+        page.update()
+
+    start_button = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
+    stop_button = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring)
+
+    page.add(
+        ft.Column(
+            [
+                status_text,
+                start_button,
+                stop_button
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        )
+    )
+
+ft.app(target=main)
