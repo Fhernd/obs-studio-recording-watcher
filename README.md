@@ -53,5 +53,5 @@ Para ejecutar la aplicación, sigue estos pasos:
 3. Ejecuta la aplicación utilizando el siguiente comando:
 
     ```bash
-        python main.py
+    python main.py
     ```

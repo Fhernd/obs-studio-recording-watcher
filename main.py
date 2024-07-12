@@ -1,14 +1,17 @@
 import time
 import os
 
+from dotenv import load_dotenv
 import flet as ft
 from obswebsocket import obsws, events, requests
 
-host = "192.168.1.40"
-port = 4455
-password = "9c1drmdDjx75lMYv"
 
-# Global variables to track monitoring state and WebSocket connection
+load_dotenv()
+
+host = os.getenv("OBS_HOST")
+port = os.getenv("OBS_PORT")
+password = os.getenv("OBS_PASSWORD")
+
 monitoring = False
 ws = None
 
