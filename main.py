@@ -57,6 +57,10 @@ def main(page: ft.Page):
         :param file_path: The path of the recording file.
         """
         def rename_file(e):
+            print('ref_txt_nombre', ref_txt_nombre_archivo)
+            print(ref_txt_nombre_archivo.current)
+            print()
+
             new_name = ref_txt_nombre_archivo.current.value
             if new_name:
                 base, ext = os.path.splitext(file_path)
@@ -72,7 +76,7 @@ def main(page: ft.Page):
             content=ft.Column(
                 [
                     ft.Text("Ingrese un nuevo nombre para la grabación (sin extensión):"),
-                    ft.TextField(ref=lambda c: setattr(ref_txt_nombre_archivo, 'value', c.value), expand=True)
+                    ft.TextField(ref=ref_txt_nombre_archivo, expand=True, autofocus=True)
                 ],
                 tight=True
             ),
