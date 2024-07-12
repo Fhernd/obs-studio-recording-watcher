@@ -92,6 +92,7 @@ def main(page: ft.Page):
 
         :param event: The event object.
         """
+        print('on_record_state_changed...')
         if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
             rec_file = event.datain['outputPath']
             show_rename_dialog(rec_file)
@@ -133,15 +134,21 @@ def main(page: ft.Page):
         dlg_modal.open = True
         page.update()
 
-    def on_close(e):
+    def on_window_event(e):
         """
         Callback function to handle the close event.
 
         :param e: The event object.
         """
-        if ws:
+        global monitoring, ws
+
+        if e.type == ft.WindowEventType.CLOSE:
             monitoring = False
-            ws.disconnect()
+        
+            if ws:
+                ws.disconnect()
+            
+            page.window.destroy()
 
 
     btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
@@ -161,7 +168,8 @@ def main(page: ft.Page):
     )
 
     page.overlay.append(snb)
-    page.on_close = on_close
+    page.window.prevent_close = True
+    page.window.on_event = on_window_event
 
 
 if __name__ == "__main__":
