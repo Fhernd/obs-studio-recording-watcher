@@ -31,9 +31,7 @@ def main(page: ft.Page):
     
     ref_txt_nombre_archivo = ft.Ref[ft.TextField]()
     
-    btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
-    btn_stop_monitoring = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring)
-    btn_stop_monitoring.disabled = True
+    snb = ft.SnackBar(content=ft.Text(""))
 
     def update_recording_status(status):
         """
@@ -60,7 +58,11 @@ def main(page: ft.Page):
         ws = obsws(host, port, password)
         ws.connect()
         ws.register(on_record_state_changed, events.RecordStateChanged)
-        page.add(ft.Text("Monitoreo iniciado"))
+        
+        page.snack_bar = ft.SnackBar(content=ft.Text("Monitoreo iniciado"))
+        page.snak_bar.open = True
+        page.update()
+        
         while monitoring:
             time.sleep(1)
 
@@ -79,7 +81,10 @@ def main(page: ft.Page):
         if ws:
             ws.disconnect()
         update_recording_status("No iniciada")
-        page.add(ft.Text("Monitoreo detenido"))
+        
+        page.snack_bar = ft.SnackBar(content=ft.Text("Monitoreo detenido"))
+        page.snak_bar.open = True
+        page.update()
 
     def on_record_state_changed(event):
         """
@@ -128,6 +133,9 @@ def main(page: ft.Page):
         dlg_modal.open = True
         page.update()
 
+    btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring)
+    btn_stop_monitoring = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring)
+    btn_stop_monitoring.disabled = True
     
     page.add(
         ft.Column(
@@ -140,6 +148,8 @@ def main(page: ft.Page):
             horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
     )
+
+    page.snack_bar = snb
 
 
 if __name__ == "__main__":
