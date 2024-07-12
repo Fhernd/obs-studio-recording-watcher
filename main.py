@@ -27,7 +27,7 @@ def main(page: ft.Page):
     page.window.height = 450
     page.window.resizable = False
 
-    txt_status = ft.Text("Estado grabación: No iniciada", size=20, color=ft.colors.BLACK)
+    txt_status = ft.Text("Estado grabación: N/D", size=20, color=ft.colors.BLACK)
     
     ref_txt_nombre_archivo = ft.Ref[ft.TextField]()
     
@@ -55,7 +55,6 @@ def main(page: ft.Page):
         btn_stop_monitoring.disabled = False
 
         monitoring = True
-        update_recording_status("Monitoreando...")
         ws = obsws(host, port, password)
         ws.connect()
         ws.register(on_record_state_changed, events.RecordStateChanged)
