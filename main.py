@@ -7,7 +7,7 @@ import logging
 from dotenv import load_dotenv
 import flet as ft
 from obswebsocket import obsws, events
-from obswebsocket.exceptions import ConnectionFailure, ConnectionClosed
+from obswebsocket.exceptions import ConnectionFailure
 
 
 # Set up logging
@@ -92,7 +92,7 @@ def main(page: ft.Page):
             update_connection_status("Conectado", ft.colors.GREEN)
             reconnect_attempts = 0
             return True
-        except (ConnectionFailure, ConnectionClosed) as e:
+        except ConnectionFailure as e:
             logger.error(f"Connection error: {str(e)}")
             update_connection_status("Error de conexión", ft.colors.RED)
             return False
