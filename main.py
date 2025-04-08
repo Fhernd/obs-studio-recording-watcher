@@ -1,5 +1,6 @@
 import time
 import os
+import json
 
 from dotenv import load_dotenv
 import flet as ft
@@ -32,6 +33,11 @@ def main(page: ft.Page):
     ref_txt_nombre_archivo = ft.Ref[ft.TextField]()
     
     snb = ft.SnackBar(content=ft.Text(""))
+
+    # Create references for settings fields
+    ref_txt_host = ft.Ref[ft.TextField]()
+    ref_txt_port = ft.Ref[ft.TextField]()
+    ref_txt_password = ft.Ref[ft.TextField]()
 
 
     def update_recording_status(status):
@@ -165,10 +171,81 @@ def main(page: ft.Page):
 
             page.open(dlg_modal)
 
+    def open_settings(e):
+        """
+        Open the settings modal dialog.
+
+        :param e: The event object.
+        """
+        # Initialize the fields with current values
+        ref_txt_host.current.value = host
+        ref_txt_port.current.value = port
+        ref_txt_password.current.value = password
+        
+        settings_dialog.open = True
+        page.update()
+        
+    def save_settings(e):
+        """
+        Save the settings to the .env file.
+
+        :param e: The event object.
+        """
+        global host, port, password
+        
+        new_host = ref_txt_host.current.value
+        new_port = ref_txt_port.current.value
+        new_password = ref_txt_password.current.value
+        
+        # Update global variables
+        host = new_host
+        port = new_port
+        password = new_password
+        
+        # Save to .env file
+        with open(".env", "w") as env_file:
+            env_file.write(f'OBS_HOST="{new_host}"\n')
+            env_file.write(f'OBS_PORT={new_port}\n')
+            env_file.write(f'OBS_PASSWORD="{new_password}"\n')
+        
+        settings_dialog.open = False
+        
+        snb.content = ft.Text("Configuración guardada correctamente")
+        snb.open = True
+        page.update()
 
     btn_start_monitoring = ft.ElevatedButton(text="Iniciar Monitoreo", on_click=start_monitoring, color=ft.colors.WHITE, bgcolor=ft.colors.GREEN_500)
     btn_stop_monitoring = ft.ElevatedButton(text="Detener Monitoreo", on_click=stop_monitoring, color=ft.colors.WHITE, bgcolor=ft.colors.RED_500)
     btn_stop_monitoring.disabled = True
+    
+    # Create the settings icon button
+    btn_settings = ft.IconButton(
+        icon=ft.icons.SETTINGS,
+        icon_color=ft.colors.BLUE_GREY_400,
+        tooltip="Configuración",
+        on_click=open_settings
+    )
+    
+    # Create the settings dialog
+    settings_dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Configuración de conexión OBS"),
+        content=ft.Column(
+            [
+                ft.Text("Configure los parámetros de conexión con OBS:"),
+                ft.TextField(ref=ref_txt_host, label="Host", value=host),
+                ft.TextField(ref=ref_txt_port, label="Puerto", value=port),
+                ft.TextField(ref=ref_txt_password, label="Contraseña", value=password, password=True),
+            ],
+            tight=True,
+            spacing=10,
+        ),
+        actions=[
+            ft.TextButton("Cancelar", on_click=lambda e: setattr(settings_dialog, "open", False)),
+            ft.TextButton("Guardar", on_click=save_settings),
+        ],
+        actions_alignment=ft.MainAxisAlignment.END,
+    )
     
     page.add(
         ft.Column(
@@ -187,14 +264,22 @@ def main(page: ft.Page):
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER
+                ),
+                # Add a spacer to push the settings icon to the bottom
+                ft.Container(height=100),
+                ft.Row(
+                    [btn_settings],
+                    alignment=ft.MainAxisAlignment.END
                 )
             ],
             alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            expand=True,
         )
     )
 
     page.overlay.append(snb)
+    page.overlay.append(settings_dialog)
     page.window.prevent_close = True
     page.window.on_event = on_window_event
 
