@@ -3,6 +3,7 @@ import os
 import json
 import threading
 import logging
+import datetime
 
 from dotenv import load_dotenv
 import flet as ft
@@ -26,6 +27,8 @@ connection_thread = None
 reconnect_attempts = 0
 MAX_RECONNECT_ATTEMPTS = 5
 RECONNECT_DELAY = 5  # seconds
+last_heartbeat = None
+HEARTBEAT_TIMEOUT = 10  # seconds
 
 
 def main(page: ft.Page):
@@ -105,13 +108,17 @@ def main(page: ft.Page):
         """
         Monitor the WebSocket connection and attempt to reconnect if it fails.
         """
-        global monitoring, reconnect_attempts
+        global monitoring, reconnect_attempts, last_heartbeat
+        
+        # Initialize the heartbeat time
+        last_heartbeat = datetime.datetime.now()
         
         while monitoring:
             try:
-                # Check if the connection is still alive
-                if ws and not ws.is_connected():
-                    logger.warning("Connection lost, attempting to reconnect")
+                # Check if we've received any events recently
+                # If not, the connection might be lost
+                if last_heartbeat and (datetime.datetime.now() - last_heartbeat).total_seconds() > HEARTBEAT_TIMEOUT:
+                    logger.warning("No heartbeat received for too long, connection might be lost")
                     update_connection_status("Reconectando...", ft.colors.ORANGE)
                     
                     # Try to reconnect
@@ -139,7 +146,7 @@ def main(page: ft.Page):
                         page.update()
                         break
                 
-                time.sleep(1)
+                time.sleep(1)  # Check every second
             except Exception as e:
                 logger.error(f"Error in connection monitor: {str(e)}")
                 time.sleep(1)
@@ -204,6 +211,9 @@ def main(page: ft.Page):
 
         :param event: The event object.
         """
+        global last_heartbeat
+        last_heartbeat = datetime.datetime.now()
+        
         if event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STARTING':
             update_recording_status("En progreso")
         elif event.datain['outputState'] == 'OBS_WEBSOCKET_OUTPUT_STOPPED':
