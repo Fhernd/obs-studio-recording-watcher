@@ -1,11 +1,18 @@
 import time
 import os
 import json
+import threading
+import logging
 
 from dotenv import load_dotenv
 import flet as ft
 from obswebsocket import obsws, events
+from obswebsocket.exceptions import ConnectionFailure, ConnectionClosed
 
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -15,6 +22,10 @@ password = os.getenv("OBS_PASSWORD")
 
 monitoring = False
 ws = None
+connection_thread = None
+reconnect_attempts = 0
+MAX_RECONNECT_ATTEMPTS = 5
+RECONNECT_DELAY = 5  # seconds
 
 
 def main(page: ft.Page):
@@ -29,6 +40,7 @@ def main(page: ft.Page):
     page.window.resizable = False
 
     txt_status = ft.Text("Estado grabación: N/D", size=20, color=ft.colors.BLACK)
+    txt_connection_status = ft.Text("Estado conexión: Desconectado", size=16, color=ft.colors.GREY_700)
     
     ref_txt_nombre_archivo = ft.Ref[ft.TextField]()
     
@@ -40,6 +52,18 @@ def main(page: ft.Page):
     ref_txt_password = ft.Ref[ft.TextField]()
 
 
+    def update_connection_status(status, color=None):
+        """
+        Update the connection status text.
+
+        :param status: The new status to display.
+        :param color: Optional color for the status text.
+        """
+        txt_connection_status.value = f"Estado conexión: {status}"
+        if color:
+            txt_connection_status.color = color
+        page.update()
+
     def update_recording_status(status):
         """
         Update the recording status text.
@@ -49,28 +73,106 @@ def main(page: ft.Page):
         txt_status.value = f"Estado grabación: {status}"
         page.update()
 
+    def connect_to_obs():
+        """
+        Connect to OBS WebSocket server.
+        
+        :return: True if connection was successful, False otherwise.
+        """
+        global ws, reconnect_attempts
+        
+        try:
+            logger.info(f"Connecting to OBS at {host}:{port}")
+            update_connection_status("Conectando...", ft.colors.ORANGE)
+            
+            ws = obsws(host, port, password)
+            ws.connect()
+            ws.register(on_record_state_changed, events.RecordStateChanged)
+            
+            update_connection_status("Conectado", ft.colors.GREEN)
+            reconnect_attempts = 0
+            return True
+        except (ConnectionFailure, ConnectionClosed) as e:
+            logger.error(f"Connection error: {str(e)}")
+            update_connection_status("Error de conexión", ft.colors.RED)
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            update_connection_status("Error inesperado", ft.colors.RED)
+            return False
+
+    def monitor_connection():
+        """
+        Monitor the WebSocket connection and attempt to reconnect if it fails.
+        """
+        global monitoring, reconnect_attempts
+        
+        while monitoring:
+            try:
+                # Check if the connection is still alive
+                if ws and not ws.is_connected():
+                    logger.warning("Connection lost, attempting to reconnect")
+                    update_connection_status("Reconectando...", ft.colors.ORANGE)
+                    
+                    # Try to reconnect
+                    if reconnect_attempts < MAX_RECONNECT_ATTEMPTS:
+                        reconnect_attempts += 1
+                        if connect_to_obs():
+                            snb.content = ft.Text(f"Reconexión exitosa (intento {reconnect_attempts})")
+                            snb.open = True
+                            page.update()
+                        else:
+                            snb.content = ft.Text(f"Error de reconexión (intento {reconnect_attempts}/{MAX_RECONNECT_ATTEMPTS})")
+                            snb.open = True
+                            page.update()
+                    else:
+                        logger.error("Maximum reconnection attempts reached")
+                        update_connection_status("Reconexión fallida", ft.colors.RED)
+                        snb.content = ft.Text("No se pudo reconectar después de varios intentos. Deteniendo monitoreo.")
+                        snb.open = True
+                        page.update()
+                        
+                        # Stop monitoring after max attempts
+                        monitoring = False
+                        btn_start_monitoring.disabled = False
+                        btn_stop_monitoring.disabled = True
+                        page.update()
+                        break
+                
+                time.sleep(1)
+            except Exception as e:
+                logger.error(f"Error in connection monitor: {str(e)}")
+                time.sleep(1)
+
     def start_monitoring(e):
         """
         Start monitoring the recording state.
 
         :param e: The event object.
         """
-        global monitoring, ws
+        global monitoring, connection_thread
 
         btn_start_monitoring.disabled = True
         btn_stop_monitoring.disabled = False
 
         monitoring = True
-        ws = obsws(host, port, password)
-        ws.connect()
-        ws.register(on_record_state_changed, events.RecordStateChanged)
         
-        snb.content = ft.Text("Monitoreando iniciado")
-        snb.open = True
-        page.update()
-        
-        while monitoring:
-            time.sleep(1)
+        # Connect to OBS
+        if connect_to_obs():
+            # Start the connection monitoring thread
+            connection_thread = threading.Thread(target=monitor_connection)
+            connection_thread.daemon = True
+            connection_thread.start()
+            
+            snb.content = ft.Text("Monitoreando iniciado")
+            snb.open = True
+            page.update()
+        else:
+            # If connection failed, don't start monitoring
+            monitoring = False
+            btn_start_monitoring.disabled = False
+            btn_stop_monitoring.disabled = True
+            page.update()
 
     def stop_monitoring(e):
         """
@@ -78,14 +180,19 @@ def main(page: ft.Page):
 
         :param e: The event object.
         """
-        global monitoring, ws
+        global monitoring, ws, connection_thread
         monitoring = False
 
         btn_start_monitoring.disabled = False
         btn_stop_monitoring.disabled = True
         
         if ws:
-            ws.disconnect()
+            try:
+                ws.disconnect()
+            except Exception as e:
+                logger.error(f"Error disconnecting: {str(e)}")
+        
+        update_connection_status("Desconectado", ft.colors.GREY_700)
         
         snb.content = ft.Text("Monitoreo detenido")
         snb.open = True
@@ -217,12 +324,12 @@ def main(page: ft.Page):
                 ws.disconnect()
                 
                 # Create a new connection with the updated settings
-                ws = obsws(host, port, password)
-                ws.connect()
-                ws.register(on_record_state_changed, events.RecordStateChanged)
-                
-                snb.content = ft.Text("Configuración guardada y conexión recargada correctamente")
+                if connect_to_obs():
+                    snb.content = ft.Text("Configuración guardada y conexión recargada correctamente")
+                else:
+                    snb.content = ft.Text("Configuración guardada pero no se pudo recargar la conexión")
             except Exception as e:
+                logger.error(f"Error reloading connection: {str(e)}")
                 snb.content = ft.Text(f"Error al recargar la conexión: {str(e)}")
         else:
             snb.content = ft.Text("Configuración guardada correctamente")
@@ -269,6 +376,13 @@ def main(page: ft.Page):
                 ft.Row(
                     [
                         ft.Container(txt_status)
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER
+                ),
+                ft.Row(
+                    [
+                        ft.Container(txt_connection_status)
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER
