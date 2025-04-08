@@ -191,7 +191,7 @@ def main(page: ft.Page):
 
         :param e: The event object.
         """
-        global host, port, password
+        global host, port, password, ws
         
         new_host = ref_txt_host.current.value
         new_port = ref_txt_port.current.value
@@ -210,7 +210,23 @@ def main(page: ft.Page):
         
         settings_dialog.open = False
         
-        snb.content = ft.Text("Configuración guardada correctamente")
+        # Reload the OBS connection if monitoring is active
+        if monitoring and ws:
+            try:
+                # Disconnect the current connection
+                ws.disconnect()
+                
+                # Create a new connection with the updated settings
+                ws = obsws(host, port, password)
+                ws.connect()
+                ws.register(on_record_state_changed, events.RecordStateChanged)
+                
+                snb.content = ft.Text("Configuración guardada y conexión recargada correctamente")
+            except Exception as e:
+                snb.content = ft.Text(f"Error al recargar la conexión: {str(e)}")
+        else:
+            snb.content = ft.Text("Configuración guardada correctamente")
+            
         snb.open = True
         page.update()
 
